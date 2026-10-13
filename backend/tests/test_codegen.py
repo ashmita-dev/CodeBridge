@@ -58,7 +58,9 @@ def test_structured_control_flow():
     cpp = cpp_for("let x = 3\nwhile x > 0 {\nif x == 2 { print(\"two\") } else if x == 1 { print(1) }"
                   " else { print(x) }\nx = x - 1 }")
     assert "goto" not in cpp
-    assert "if (x == 2) {" in cpp and "} else {" in cpp and "if (x == 1) {" in cpp
+    assert "if (x == 2) {" in cpp
+    assert "} else if (x == 1) {" in cpp
+    assert "} else {" in cpp
 
 
 def test_expressions_are_rebuilt_with_correct_parentheses():

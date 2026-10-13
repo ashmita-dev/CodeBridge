@@ -426,9 +426,16 @@ class Emitter:
             elif isinstance(node, SIf):
                 self.lines.append(f"{pad}if ({self.cond_text(node.cond, node.negate)}) {{")
                 self.emit(node.then, depth + 1)
-                if node.orelse:
+                orelse = node.orelse
+                # An else branch holding a single if becomes an "else if" chain.
+                while orelse and len(orelse) == 1 and isinstance(orelse[0], SIf):
+                    inner = orelse[0]
+                    self.lines.append(f"{pad}}} else if ({self.cond_text(inner.cond, inner.negate)}) {{")
+                    self.emit(inner.then, depth + 1)
+                    orelse = inner.orelse
+                if orelse:
                     self.lines.append(f"{pad}}} else {{")
-                    self.emit(node.orelse, depth + 1)
+                    self.emit(orelse, depth + 1)
                 self.lines.append(f"{pad}}}")
             elif isinstance(node, SWhile):
                 if node.cond is not None:
