@@ -122,7 +122,9 @@ def _local_pass(code: list[Instr], report: OptimizationReport) -> list[Instr]:
 
     def assign(dest: Var, value: Operand) -> None:
         kill(dest.name)
-        if value != dest:
+        # Propagate constants and copies of user variables. Copies of temporaries
+        # are left alone so that temporary coalescing can remove the temporary.
+        if value != dest and not (isinstance(value, Var) and value.temp):
             known[dest.name] = value
         out.append(Copy(dest, value))
 
