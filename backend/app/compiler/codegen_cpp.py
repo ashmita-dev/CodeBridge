@@ -239,15 +239,26 @@ def reads_of_instr(instr: Instr) -> list[str]:
     return [o.name for o in uses(instr) if isinstance(o, Var)]
 
 
-def _structure(items: list, start: int, end: int) -> list[SNode]:
+def _structure_program(items: list) -> list[SNode]:
     labels = {it.name: i for i, it in enumerate(items) if isinstance(it, Label)}
+    gotos: dict[str, list[int]] = {}
+    for idx, it in enumerate(items):
+        if isinstance(it, Goto):
+            gotos.setdefault(it.label, []).append(idx)
+    return _structure(items, 0, len(items), labels, gotos)
+
+
+def _structure(items: list, start: int, end: int, labels: dict[str, int],
+               gotos: dict[str, list[int]]) -> list[SNode]:
+    def sub(a: int, b: int) -> list[SNode]:
+        return _structure(items, a, b, labels, gotos)
+
     nodes: list[SNode] = []
     i = start
     while i < end:
         it = items[i]
         if isinstance(it, Label):
-            back = [j for j in range(i + 1, end)
-                    if isinstance(items[j], Goto) and items[j].label == it.name]
+            back = [j for j in gotos.get(it.name, []) if i < j < end]
             if not back:
                 raise Unstructured(f"label {it.name} is not a loop header")
             j = back[-1]
@@ -255,7 +266,7 @@ def _structure(items: list, start: int, end: int) -> list[SNode]:
             exit_label = items[j + 1].name if j + 1 < end and isinstance(items[j + 1], Label) else None
             if (isinstance(first, tuple) and first[0] in (IfFalse, IfTrue)
                     and exit_label is not None and first[2] == exit_label):
-                body = _structure(items, i + 2, j)
+                body = sub(i + 2, j)
                 nodes.append(SWhile(first[1], first[0] is IfTrue, body))
                 i = j + 2
                 continue
@@ -268,13 +279,13 @@ def _structure(items: list, start: int, end: int) -> list[SNode]:
                         exit_at = k
                         break
             if exit_at is not None:
-                prelude = _structure(items, i + 1, exit_at)
-                body = _structure(items, exit_at + 1, j)
+                prelude = sub(i + 1, exit_at)
+                body = sub(exit_at + 1, j)
                 kind, cond, _ = items[exit_at]
                 nodes.append(SWhile(None, False, body, prelude, cond, kind is IfFalse))
                 i = j + 2
             else:
-                nodes.append(SWhile(None, False, _structure(items, i + 1, j)))
+                nodes.append(SWhile(None, False, sub(i + 1, j)))
                 i = j + 1
             continue
         if isinstance(it, tuple) and it[0] in (IfFalse, IfTrue):
@@ -286,12 +297,12 @@ def _structure(items: list, start: int, end: int) -> list[SNode]:
             if (k - 1 > i and isinstance(before, Goto) and before.label in labels
                     and k < labels[before.label] < end):
                 m = labels[before.label]
-                then = _structure(items, i + 1, k - 1)
-                orelse = _structure(items, k + 1, m)
+                then = sub(i + 1, k - 1)
+                orelse = sub(k + 1, m)
                 nodes.append(SIf(cond, kind is IfTrue, then, orelse))
                 i = m + 1
             else:
-                nodes.append(SIf(cond, kind is IfTrue, _structure(items, i + 1, k), None))
+                nodes.append(SIf(cond, kind is IfTrue, sub(i + 1, k), None))
                 i = k + 1
             continue
         if isinstance(it, Goto):
@@ -455,7 +466,7 @@ def generate_cpp(code: list[Instr]) -> tuple[str, bool]:
 
     items = _inline_temps(code)
     try:
-        nodes = _structure(items, 0, len(items))
+        nodes = _structure_program(items)
         structured = True
     except Unstructured:
         nodes = _goto_program(items)
