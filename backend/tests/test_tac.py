@@ -37,6 +37,20 @@ def test_unary_and_print():
         "a = 3", "t1 = -a", "t2 = not true", 'print t1, t2, "s"']
 
 
+@pytest.mark.parametrize("bare, call", [
+    ("let sum = 4\nprint sum", "let sum = 4\nprint(sum)"),
+    ("print 10", "print(10)"),
+    ("let x = 1\nlet y = 2\nprint x + y", "let x = 1\nlet y = 2\nprint(x + y)"),
+])
+def test_both_print_forms_lower_to_the_same_tac(bare, call):
+    assert tac(bare) == tac(call)
+
+
+def test_bare_print_tac():
+    assert tac("let x = 1\nlet y = 2\nprint x + y, x") == [
+        "x = 1", "y = 2", "t1 = x + y", "print t1, x"]
+
+
 def test_if_else_uses_labels_and_jumps():
     assert tac("let x = 1\nif x > 0 { print(1) } else { print(2) }") == [
         "x = 1",

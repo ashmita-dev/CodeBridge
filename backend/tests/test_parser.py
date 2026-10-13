@@ -106,7 +106,13 @@ def test_spans_cover_source_ranges():
     ("x + 1", "expected '=' after 'x'", 1, 3),
     ("if x > 1 print(x)", "expected '{'", 1, 10),
     ("while true {\n print(1)\n", "expected '}'", 3, 1),
-    ("print 5", "expected '('", 1, 7),
+    ("print", "expected an expression after 'print'", 1, 6),
+    ("print 1 2", "expected end of statement", 1, 9),
+    ("print(1", "expected ')' to close 'print('", 1, 8),
+    ("print(1,)", "expected an expression", 1, 9),
+    ("print(1) 2", "expected end of statement", 1, 10),
+    ("print(1, 2) + 3", "expected ')' to close '('", 1, 8),
+    ("print let", "keyword 'let' cannot be used", 1, 7),
     ("let x = 1 2", "expected end of statement", 1, 11),
     ("let x = 1 +", "expected an expression", 1, 12),
     ("else { }", "'else' without", 1, 1),
@@ -120,6 +126,50 @@ def test_syntax_errors_are_structured(source, fragment, line, column):
     err = syntax_error(source).diagnostic
     assert fragment in err.message
     assert (err.span.line, err.span.column) == (line, column)
+
+
+def without_spans(data):
+    if isinstance(data, dict):
+        return {k: without_spans(v) for k, v in data.items() if k != "span"}
+    if isinstance(data, list):
+        return [without_spans(v) for v in data]
+    return data
+
+
+def print_args(source: str) -> list:
+    """Print arguments as JSON without spans (the forms differ only in columns)."""
+    stmt = parse_src(source).statements[-1]
+    assert isinstance(stmt, ast.PrintStmt)
+    return without_spans(ast.to_json(stmt.args))
+
+
+@pytest.mark.parametrize("bare, call", [
+    ("print sum", "print(sum)"),
+    ("print 10", "print(10)"),
+    ("print x + y", "print(x + y)"),
+    ('print x + y * 2, "s", not b', 'print(x + y * 2, "s", not b)'),
+    ("print -x", "print(-x)"),
+])
+def test_bare_and_parenthesized_print_build_the_same_ast(bare, call):
+    assert print_args(bare) == print_args(call)
+
+
+def test_print_parenthesis_can_start_a_longer_expression():
+    # The '(' only groups the first operand when more expression follows it.
+    [arg] = parse_src("print (a + b) * 2").statements[0].args
+    assert isinstance(arg, ast.Binary) and arg.op == "*"
+    assert isinstance(arg.left, ast.Binary) and arg.left.op == "+"
+    assert len(parse_src("print (a), b").statements[0].args) == 2
+    assert print_args("print (x)") == print_args("print x")
+    assert parse_src("print()").statements[0].args == []
+
+
+def test_print_spans_and_statement_ends():
+    bare, call = parse_src("print sum + 1; print(sum)").statements
+    assert (bare.span.column, bare.span.end_column) == (1, 14)
+    assert (call.span.column, call.span.end_column) == (16, 26)
+    block_print = parse_src("if t { print 2 }").statements[0].then_block.statements[0]
+    assert isinstance(block_print, ast.PrintStmt)
 
 
 def test_deep_nesting_is_rejected_cleanly():

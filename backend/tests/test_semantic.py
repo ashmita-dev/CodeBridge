@@ -17,6 +17,17 @@ def errors(source: str) -> list:
     return [d for d in check(source)[1].diagnostics if d.is_error]
 
 
+@pytest.mark.parametrize("source", ["print missing + 1", "print(missing + 1)"])
+def test_both_print_forms_are_resolved(source):
+    [err] = errors(source)
+    assert err.code == "S001" and (err.span.line, err.span.column) == (1, 7)
+
+
+@pytest.mark.parametrize("source", ["print 1 + true", "print(1 + true)"])
+def test_both_print_forms_are_type_checked(source):
+    assert [e.code for e in errors(source)] == ["S004"]
+
+
 def test_valid_program_is_typed_and_resolved():
     program, result = check("let x = 1\nlet y = x * 2.0\nprint(y > 1 and true)")
     assert result.ok

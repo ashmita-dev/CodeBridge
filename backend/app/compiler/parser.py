@@ -6,7 +6,8 @@ Grammar (EBNF). ``sep`` is a NEWLINE or ';'.
     statement   = let_stmt | assign_stmt | print_stmt | if_stmt | while_stmt ;
     let_stmt    = "let" IDENT [ ":" type ] "=" expression ;
     assign_stmt = IDENT "=" expression ;
-    print_stmt  = "print" "(" [ expression { "," expression } ] ")" ;
+    print_stmt  = "print" "(" [ args ] ")" | "print" args ;
+    args        = expression { "," expression } ;
     if_stmt     = "if" expression block [ "else" ( if_stmt | block ) ] ;
     while_stmt  = "while" expression block ;
     block       = "{" { sep } { statement { sep } } "}" ;
@@ -24,7 +25,10 @@ Grammar (EBNF). ``sep`` is a NEWLINE or ';'.
     primary     = INT | FLOAT | STRING | "true" | "false" | IDENT
                 | "(" expression ")" ;
 
-All binary operators are left-associative. A simple statement must be followed
+In ``print_stmt`` the parenthesized form is chosen when the ')' closing it ends
+the statement; otherwise the '(' starts the first expression of the bare form,
+so ``print (a + b) * 2`` prints one value. All binary operators are
+left-associative. A simple statement must be followed
 by a newline, ';', '}' or the end of input. The parser stops at the first
 syntax error and reports it as a structured diagnostic.
 """
@@ -47,6 +51,8 @@ TYPE_TOKENS = {
     T.TYPE_STRING: Type.STRING,
     T.TYPE_BOOL: Type.BOOL,
 }
+
+STATEMENT_END = (T.NEWLINE, T.SEMICOLON, T.RBRACE, T.EOF)
 
 BINARY_LEVELS: list[dict[T, str]] = [
     {T.OR: "or"},
@@ -185,15 +191,32 @@ class Parser:
 
     def _print(self) -> ast.PrintStmt:
         print_tok = self._advance()
-        self._expect(T.LPAREN, "'(' after 'print'")
-        args: list[ast.Expr] = []
-        if not self._check(T.RPAREN):
+        if self._check(T.LPAREN):
+            # "print(a, b)" is the call form. If more expression follows the
+            # ')', as in "print (a + b) * 2", the parenthesis only grouped the
+            # start of an expression, so re-parse it in the bare form.
+            start = self.pos
+            self._advance()
+            args: list[ast.Expr] = []
+            if not self._check(T.RPAREN):
+                args = self._print_args()
+            close = self._expect(T.RPAREN, "')' to close 'print('")
+            if self._check(*STATEMENT_END):
+                return ast.PrintStmt(print_tok.span.merge(close.span), args)
+            self.pos = start
+        if self._check(*STATEMENT_END):
+            raise self._error(
+                f"expected an expression after 'print' but found {describe(self.cur)}",
+                notes=("use 'print()' to print an empty line",))
+        args = self._print_args()
+        return ast.PrintStmt(print_tok.span.merge(args[-1].span), args)
+
+    def _print_args(self) -> list[ast.Expr]:
+        args = [self._expression()]
+        while self._check(T.COMMA):
+            self._advance()
             args.append(self._expression())
-            while self._check(T.COMMA):
-                self._advance()
-                args.append(self._expression())
-        close = self._expect(T.RPAREN, "')' to close 'print('")
-        return ast.PrintStmt(print_tok.span.merge(close.span), args)
+        return args
 
     def _block(self, owner: str) -> ast.Block:
         # Allow the opening brace on the next line.

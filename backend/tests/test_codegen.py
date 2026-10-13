@@ -107,6 +107,13 @@ def test_unstructured_tac_falls_back_to_goto():
     assert "goto" in cpp and "long long x = 0;" in cpp
 
 
+@pytest.mark.parametrize("optimized", [True, False])
+def test_both_print_forms_generate_the_same_cpp(optimized):
+    bare = "let x = 3\nlet y = 4\nlet sum = x + y\nprint sum\nprint 10\nprint x + y, (x - y) * 2"
+    call = "let x = 3\nlet y = 4\nlet sum = x + y\nprint(sum)\nprint(10)\nprint(x + y, (x - y) * 2)"
+    assert cpp_for(bare, optimized) == cpp_for(call, optimized)
+
+
 def test_cpp_follows_optimized_tac():
     result = compile_source("let a = 6 * 7\nprint(a)")
     assert result.success
@@ -129,6 +136,16 @@ def test_examples_compile_and_match_expected_output(name):
 @needs_cxx
 def test_unoptimized_cpp_matches_too():
     source = (EXAMPLES_DIR / "primes.cb").read_text(encoding="utf-8")
+    assert build_and_run_cpp(cpp_for(source, optimized=False)) == run_ast(source)
+
+
+@needs_cxx
+def test_both_print_forms_build_and_run():
+    source = ("let x = 3\nlet y = 4\nlet sum = 0\nwhile x > 0 { sum = sum + x * y\nx = x - 1 }\n"
+              "print sum\nprint(sum)\nprint 10\nprint(10)\nprint x + y\nprint(x + y)\n"
+              'print (x + y) * 2, "done"')
+    assert run_ast(source) == "24\n24\n10\n10\n4\n4\n8 done\n"
+    assert build_and_run_cpp(cpp_for(source)) == run_ast(source)
     assert build_and_run_cpp(cpp_for(source, optimized=False)) == run_ast(source)
 
 

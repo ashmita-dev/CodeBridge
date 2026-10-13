@@ -67,7 +67,7 @@ Students usually meet compiler phases one at a time and on paper. They rarely ge
   - copy buttons
   - responsive mobile layout
 - **Testing:**
-  - 178 backend tests, including a 300-program randomized differential test of the optimizer
+  - 204 backend tests, including a 300-program randomized differential test of the optimizer
   - g++ build-and-run checks for every example
   - an end-to-end HTTP test against a live Uvicorn server
   - 20 frontend tests
@@ -104,7 +104,8 @@ program     = { sep } { statement { sep } } EOF ;          (* sep = NEWLINE | ";
 statement   = let_stmt | assign_stmt | print_stmt | if_stmt | while_stmt ;
 let_stmt    = "let" IDENT [ ":" type ] "=" expression ;
 assign_stmt = IDENT "=" expression ;
-print_stmt  = "print" "(" [ expression { "," expression } ] ")" ;
+print_stmt  = "print" "(" [ args ] ")" | "print" args ;
+args        = expression { "," expression } ;
 if_stmt     = "if" expression block [ "else" ( if_stmt | block ) ] ;
 while_stmt  = "while" expression block ;
 block       = "{" { sep } { statement { sep } } "}" ;
@@ -132,7 +133,7 @@ primary     = INT | FLOAT | STRING | "true" | "false" | IDENT | "(" expression "
 | `+ - * / %`, unary `-`, parentheses | `+=`, `++`, casts |
 | `== != < <= > >=` | `&&`, `\|\|`, `!` (use `and`, `or`, `not`) |
 | `and`, `or` (short-circuit), `not` | input / reading values |
-| `print(a, b, ...)` | single-quoted strings, characters |
+| `print(a, b, ...)`, or without parentheses: `print a, b` | single-quoted strings, characters |
 | `if` / `else if` / `else`, `while` (nestable) | free-standing `{ }` blocks |
 | `#` comments, newline or `;` statement ends | expressions as statements |
 
@@ -427,7 +428,7 @@ The frontend calls `http://localhost:8000` in development by default. To point i
 ## Testing
 
 ```powershell
-cd backend;  .venv\Scripts\python.exe -m pytest      # 178 tests
+cd backend;  .venv\Scripts\python.exe -m pytest      # 204 tests
 cd frontend; npm run typecheck; npm test; npm run build   # 20 tests + type check + build
 ```
 

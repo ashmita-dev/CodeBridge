@@ -60,7 +60,7 @@ source → lexer → parser → semantic → TAC → optimizer → C++ codegen
 Each phase stops the pipeline on errors.
 
 Key design decisions:
-- **Statements:** a newline or `;` ends a statement. Blocks use `{}`. `else if` chains are supported.
+- **Statements:** a newline or `;` ends a statement. Blocks use `{}`. `else if` chains are supported. `print` works with or without parentheses.
 - **Types:** int (`long long`), float (`double`), string (`std::string`) and bool. Only int→float converts implicitly.
 - **Value semantics follow C++:** integer division truncates, and `%` takes the sign of the dividend. `print` formats floats like `std::cout` (`%g`).
 - **Shadowed variables** get unique names (`x_2`) in semantic analysis. Names are also kept clear of C++ keywords and the TAC temporaries `tN`.
@@ -136,3 +136,4 @@ Toolchain:
   - M1–M7 implemented. 178 backend tests pass, including g++ builds of every example and 300 random differential programs.
   - M8–M11: frontend, docs and CI completed.
   - Final run: backend 178 passed; frontend typecheck OK, 20 tests passed, build OK; GitHub Actions CI green.
+  - `print` now accepts both `print(expr, ...)` and the bare form `print expr, ...` (same AST, TAC and C++). A `(` after `print` is the parenthesized form only if its `)` ends the statement, so `print (a + b) * 2` prints one value. A bare `print` alone is a syntax error; `print()` prints an empty line. Examples keep `print(...)`. Backend 204 passed; frontend typecheck OK, 20 passed, build OK.

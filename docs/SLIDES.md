@@ -79,7 +79,7 @@ This deck has 12 slides, sized for a 10–12 minute talk. Each slide below lists
 - *Visual:* the generated C++ for the primes example
 
 ### Slide 11: Testing and results
-- 178 backend tests and 20 frontend tests, run in CI on every push
+- 204 backend tests and 20 frontend tests, run in CI on every push
 - Every example is checked 4 ways (AST interpreter, TAC, optimized TAC, g++ binary), and the outputs must be identical
 - 300 random programs test the optimizer
 - End-to-end test: live server → HTTP → g++ → output

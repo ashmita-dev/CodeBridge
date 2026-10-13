@@ -51,7 +51,8 @@ program     = { sep } { statement { sep } } EOF ;
 statement   = let_stmt | assign_stmt | print_stmt | if_stmt | while_stmt ;
 let_stmt    = "let" IDENT [ ":" type ] "=" expression ;
 assign_stmt = IDENT "=" expression ;
-print_stmt  = "print" "(" [ expression { "," expression } ] ")" ;
+print_stmt  = "print" "(" [ args ] ")" | "print" args ;
+args        = expression { "," expression } ;
 if_stmt     = "if" expression block [ "else" ( if_stmt | block ) ] ;
 while_stmt  = "while" expression block ;
 block       = "{" { sep } { statement { sep } } "}" ;
@@ -108,11 +109,15 @@ So `-2 * 3 + 4 < 10 and not done` parses as `((((-2) * 3) + 4) < 10) and (not do
 - **Logic:** `and`, `or` and `not` need `bool` operands. `and` and `or` **short-circuit**, so the right operand is evaluated only when needed.
 - **Conditions** of `if` and `while` must be `bool`. There is no truthiness: write `x != 0`.
 - **Scopes:** every block opens a new scope. A name may be declared once per scope. An inner block may shadow an outer variable. A variable is visible from its declaration to the end of its block. The initializer of `let x = ...` cannot refer to the `x` being declared.
-- **`print(a, b, ...)`** writes the values separated by single spaces and ends with a newline. `print()` writes an empty line. Output formats:
-  - `int`: decimal
-  - `float`: like C++ `std::cout`, i.e. `%g` with 6 significant digits (`3.14159`, `1e+06`)
-  - `bool`: `true`/`false`
-  - `string`: verbatim
+- **`print(a, b, ...)`** writes the values separated by single spaces and ends with a newline. `print()` writes an empty line.
+  - The parentheses are optional: `print sum`, `print x + y` and `print a, b` mean the same as `print(sum)`, `print(x + y)` and `print(a, b)`. Both forms produce the same AST, TAC and C++. The examples use `print(...)`.
+  - When a `(` follows `print`, it is the parenthesized form only if the matching `)` ends the statement. Otherwise it groups the start of the first expression: `print (a + b) * 2` prints one value, `(a + b) * 2`.
+  - A bare `print` with nothing after it is a syntax error. Use `print()` for an empty line.
+  - Output formats:
+    - `int`: decimal
+    - `float`: like C++ `std::cout`, i.e. `%g` with 6 significant digits (`3.14159`, `1e+06`)
+    - `bool`: `true`/`false`
+    - `string`: verbatim
 - **Division by a literal zero** (`x / 0`, `x % 0`) is a compile-time error. Division by a variable that holds zero at run time is undefined behavior, as in C++.
 - Integer overflow at run time is undefined behavior, as in C++. The optimizer never folds an expression that would overflow.
 

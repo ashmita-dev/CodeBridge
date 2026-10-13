@@ -1,7 +1,7 @@
 # Test Matrix
 
 The tests break down as follows:
-- **198 automated tests in total:** 178 backend tests (pytest) and 20 frontend tests (Vitest).
+- **224 automated tests in total:** 204 backend tests (pytest) and 20 frontend tests (Vitest).
 - **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs every suite on each push. It also runs the frontend type check and production build.
 
 How to run them:
@@ -16,12 +16,12 @@ cd frontend; npm run typecheck; npm test; npm run build
 | File | Tests | Covers |
 |---|---:|---|
 | `test_lexer.py` | 12 | token kinds, longest-match operators, literal decoding, line/column tracking, newline and comment handling, CRLF, invalid characters (with hints), malformed numbers, range checks, string errors, token JSON |
-| `test_parser.py` | 35 | 15 precedence/associativity cases, statements and blocks, `else if`, brace placement, spans, 15 structured syntax-error cases (message plus line/column), the nesting limit, AST JSON serialization |
-| `test_semantic.py` | 27 | typing and resolution, 18 error cases (S001–S006 with exact positions), no cascading errors, scopes and shadowing, block visibility, initializer scoping, unique C++-safe names, widening rules, unused warnings, typed AST JSON |
-| `test_tac.py` | 14 | exact TAC for expressions, conversions, unary/print, if/else, if, while, short-circuit and/or, shadowed names, label integrity, TAC interpreter vs. AST interpreter |
+| `test_parser.py` | 48 | 15 precedence/associativity cases, statements and blocks, `else if`, brace placement, spans, 21 structured syntax-error cases (including invalid `print` forms), `print x` and `print(x)` build the same AST, `print (a + b) * 2` grouping (message plus line/column), the nesting limit, AST JSON serialization |
+| `test_semantic.py` | 31 | typing and resolution, both `print` forms resolved and type-checked, 18 error cases (S001–S006 with exact positions), no cascading errors, scopes and shadowing, block visibility, initializer scoping, unique C++-safe names, widening rules, unused warnings, typed AST JSON |
+| `test_tac.py` | 18 | exact TAC for expressions, conversions, unary/print, both `print` forms give identical TAC, if/else, if, while, short-circuit and/or, shadowed names, label integrity, TAC interpreter vs. AST interpreter |
 | `test_optimizer.py` | 28 | folding and propagation, C++ integer semantics, refusing unsafe folds (overflow, ±inf), algebraic identities, float identities that must **not** apply, no propagation into loops or across joins, invalidation on reassignment, branch folding and dead code, `while true`, coalescing, user variables and prints kept, short-circuit safety, label consistency, fixed point, **examples equivalence**, **300 random differential programs** |
-| `test_codegen.py` | 24 | program skeleton, type mapping, inline vs. hoisted declarations, structured control flow and `else if`, parenthesization, conversions and string concatenation, literal wrapping, string escaping, INT64_MIN, goto fallback, merged print text, C++ follows optimized TAC; **g++ build and run** of every example, unoptimized output, random programs and semantic edge cases |
-| `test_api.py` | 29 | full success payload, optimizer toggle, lexical/syntax/semantic error payloads (no downstream artifacts), warnings, empty program, Unicode, request validation (422), malformed JSON, size limit (413), JSON 500 handler, CORS preflight, every example through the API, determinism, a 20k-character program |
+| `test_codegen.py` | 27 | program skeleton, both `print` forms give identical C++ (and are built and run with g++), type mapping, inline vs. hoisted declarations, structured control flow and `else if`, parenthesization, conversions and string concatenation, literal wrapping, string escaping, INT64_MIN, goto fallback, merged print text, C++ follows optimized TAC; **g++ build and run** of every example, unoptimized output, random programs and semantic edge cases |
+| `test_api.py` | 31 | full success payload, both `print` forms through the API, invalid `print` syntax payload, optimizer toggle, lexical/syntax/semantic error payloads (no downstream artifacts), warnings, empty program, Unicode, request validation (422), malformed JSON, size limit (413), JSON 500 handler, CORS preflight, every example through the API, determinism, a 20k-character program |
 | `test_health.py` | 3 | `/health`, CORS allow and deny |
 | `test_e2e_server.py` | 6 | **end-to-end:** starts Uvicorn, checks `/health` over HTTP, error programs over HTTP, invalid request, compiles examples over HTTP, then builds and runs the returned C++ |
 
@@ -47,7 +47,8 @@ cd frontend; npm run typecheck; npm test; npm run build
 | while loops (nested) | `test_tac.py::test_while_loop_shape`, `primes.cb` (nested loops) built with g++ |
 | Undefined variables | `test_semantic.py` (S001), `test_api.py::test_semantic_error_response`, `error_semantic.cb` |
 | Type mismatches | `test_semantic.py` (S003/S004/S005), `error_semantic.cb` |
-| Malformed syntax | `test_parser.py::test_syntax_errors_are_structured` (15 cases), `error_syntax.cb` |
+| Malformed syntax | `test_parser.py::test_syntax_errors_are_structured` (21 cases), `error_syntax.cb` |
+| `print x` and `print(x)` | `test_parser.py::test_bare_and_parenthesized_print_build_the_same_ast`, `::test_print_parenthesis_can_start_a_longer_expression`, `test_semantic.py::test_both_print_forms_*`, `test_tac.py::test_both_print_forms_lower_to_the_same_tac`, `test_codegen.py::test_both_print_forms_*`, `test_api.py::test_both_print_forms_compile_through_the_api`, `::test_invalid_print_syntax_response` |
 | Lexical errors | `test_lexer.py`, `error_lexical.cb` |
 | Optimizer preserves behavior | `test_optimizer.py::test_examples_behave_identically_after_optimization`, `::test_differential_random_programs` (300 programs), g++ runs |
 | Optimizer is conservative | `test_unsafe_operations_are_not_folded`, `test_float_identities_that_are_not_exact_are_kept`, `test_constants_are_not_propagated_into_loops`, `test_values_are_forgotten_at_branch_joins`, `test_reassignment_invalidates_copies` |
@@ -73,7 +74,7 @@ These are the results of the final run on 2026-10-13. The development machine wa
 
 | Check | Result |
 |---|---|
-| Backend pytest | 178 passed |
+| Backend pytest | 204 passed |
 | Frontend type check (TypeScript 7) | passed |
 | Frontend Vitest | 20 passed |
 | Frontend production build (Vite 8) | passed |

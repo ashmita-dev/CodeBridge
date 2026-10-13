@@ -68,6 +68,23 @@ def test_syntax_error_response():
     assert data["ast"] is None and data["tac"] is None and data["cpp"] is None
 
 
+def test_both_print_forms_compile_through_the_api():
+    bare = compile_("let x = 1\nlet y = 2\nlet sum = x + y\nprint sum\nprint 10\nprint x + y")
+    call = compile_("let x = 1\nlet y = 2\nlet sum = x + y\nprint(sum)\nprint(10)\nprint(x + y)")
+    assert bare["success"] is True and call["success"] is True
+    for artifact in ("tac", "optimized_tac", "cpp"):
+        assert bare[artifact] == call[artifact]
+
+
+def test_invalid_print_syntax_response():
+    data = compile_("let x = 1\nprint")
+    assert data["success"] is False
+    diag = data["diagnostics"][0]
+    assert diag["stage"] == "syntax" and "expected an expression after 'print'" in diag["message"]
+    assert (diag["line"], diag["column"]) == (2, 6)
+    assert data["tac"] is None and data["cpp"] is None
+
+
 def test_semantic_error_response():
     data = compile_('let a = 1\nprint(b)\na = "text"')
     assert data["success"] is False
