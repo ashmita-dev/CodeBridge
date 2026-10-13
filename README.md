@@ -7,9 +7,11 @@
 - **App:** https://codebridge-swart.vercel.app (frontend on Vercel)
 - **API health:** https://codebridge-api.onrender.com/health (FastAPI backend on Render)
 - **Source:** https://github.com/ashmita-dev/CodeBridge
+- **Project report:** [DOCX](project-deliverables/CodeBridge_Project_Report.docx) · [PDF](project-deliverables/CodeBridge_Project_Report.pdf) (10 pages)
+- **Presentation:** [PPTX](project-deliverables/CodeBridge_Presentation.pptx) (15 slides, with speaker notes)
 
 **Using the live app:**
-1. Open the [live demo](https://codebridge-swart.vercel.app). The backend runs on Render's free plan and sleeps when idle, so the first compile can take up to a minute while the header shows it waking up.
+1. Open the [live demo](https://codebridge-swart.vercel.app). The backend runs on Render's free plan and sleeps when idle, so the first compile can take up to a minute; meanwhile the output panel shows "Waking up the compiler server".
 2. Pick a program from the example menu, or type your own. With **Auto** on it recompiles as you type; otherwise press **Compile** (Ctrl/⌘+Enter).
 3. Use the tabs to see each phase: generated **C++**, **Tokens**, **AST**, **Symbols**, **TAC**, **Optimized TAC** and **Diagnostics**. Errors are underlined in the editor.
 

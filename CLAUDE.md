@@ -144,6 +144,15 @@ Toolchain:
     - Syntax and semantic errors return diagnostics with no C++.
   - Per-deployment `*.vercel.app` URLs are behind Vercel Authentication (the default). Only the production domain is public, and only it is in `CORS_ORIGINS`.
   - If the frontend domain changes, update `CORS_ORIGINS` on Render. If the backend URL changes, update `VITE_API_URL` on Vercel and redeploy.
+
+## 9. Academic deliverables (`project-deliverables/`)
+
+- **Report:** `CodeBridge_Project_Report.docx` and its PDF export, exactly 10 pages; Word's page count is checked by `build/export_report.py`.
+- **Presentation:** `CodeBridge_Presentation.pptx`, 15 slides at 16:9 with speaker notes; diagrams, code and tables are native shapes.
+- **Generation:** both are produced by the scripts in `build/` (python-docx, python-pptx, matplotlib; Word and PowerPoint via COM for export and rendering). Edit the scripts and regenerate rather than hand-editing, so the facts stay in sync.
+- **Screenshots:** genuine captures of the live site (13 Oct 2026), stored in `assets/screenshots`, with crops in `assets/screenshots/crops`.
+- **If test counts or features change**, update the report and slide text in `build/`, rebuild, and re-verify 10 pages and 15 slides.
+- **Placeholders** for student name, roll number, department, institution, guide and academic year remain for the owner to fill in.
 - Never claim a deployment succeeded without checking `/health` and making a real compile request from the deployed frontend.
 
 ## 8. Progress log

@@ -32,6 +32,8 @@ pnpm-debug.log*
 dist/
 build/
 out/
+# generator scripts for the report and slides (source, not build output)
+!project-deliverables/build/
 
 # ---- Environment files and secrets ----
 .env
