@@ -1,0 +1,6 @@
+sum of 1 .. 10 = 55
+15! = 1307674368000
+T minus 3
+T minus 2
+T minus 1
+Liftoff!

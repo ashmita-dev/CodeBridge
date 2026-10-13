@@ -1,0 +1,6 @@
+Total: 57
+paid? false | not paid? true
+Tab:	done Quote: "ok"
+safe: divisor is zero
+inner
+1

@@ -1,0 +1,3 @@
+Hello from CodeBridge 1
+Ready: true
+Area of 8 x 5 is 40
