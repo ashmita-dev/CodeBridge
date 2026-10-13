@@ -87,7 +87,7 @@ Toolchain:
 - [x] M9 UI polish, deep links (`?example=` and `?tab=`), screenshots
 - [x] M10 README, docs/TEST_MATRIX.md, docs/REPORT.md, docs/SLIDES.md
 - [x] M11 Full verification, CI green
-- [ ] M12 Deployment: Vercel (frontend) and Render (backend) **← next; needs the owner's account access**
+- [x] M12 Deployment: Vercel (frontend) and Render (backend), verified live on 2026-10-13
 
 ## 5. Mandatory testing rules
 
@@ -126,7 +126,24 @@ Toolchain:
   - a clean venv with only `requirements.txt` serves the app using Render's start command;
   - the production build with `VITE_API_URL` set compiles against it;
   - CORS allows only the configured origin.
-- **Status:** not deployed yet. No Render or Vercel CLI or credentials are available on this machine. **Live URLs: none yet.**
+- **Status: deployed and verified live (2026-10-13).**
+  - Frontend: https://codebridge-swart.vercel.app
+    - Vercel project `codebridge` in scope `ashmita-mazumdar`, connected to GitHub, so it redeploys on push to `main`.
+    - `VITE_API_URL` (Production) is `https://codebridge-api.onrender.com`.
+    - Deploy manually with `npx vercel@63.1.2 deploy --prod`. The local link lives in `.vercel/` (git-ignored).
+    - The CLI also writes `.env.local` (an OIDC token), which is git-ignored and in `.vercelignore`.
+  - Backend: https://codebridge-api.onrender.com. Health: https://codebridge-api.onrender.com/health
+    - Render Blueprint from `render.yaml`, free plan, auto-deploys on push to `main`.
+    - `CORS_ORIGINS` is `https://codebridge-swart.vercel.app` and is set in the Render dashboard (`sync: false`).
+  - Verified:
+    - `/health` returns 200.
+    - CORS allows the Vercel origin and rejects others.
+    - The live bundle contains the Render URL.
+    - Headless Edge loaded the live app, showed "Compiler online" and compiled FizzBuzz through all six phases.
+    - C++ returned by the live API for fizzbuzz, primes and types, built with g++, matches `examples/expected`.
+    - Syntax and semantic errors return diagnostics with no C++.
+  - Per-deployment `*.vercel.app` URLs are behind Vercel Authentication (the default). Only the production domain is public, and only it is in `CORS_ORIGINS`.
+  - If the frontend domain changes, update `CORS_ORIGINS` on Render. If the backend URL changes, update `VITE_API_URL` on Vercel and redeploy.
 - Never claim a deployment succeeded without checking `/health` and making a real compile request from the deployed frontend.
 
 ## 8. Progress log

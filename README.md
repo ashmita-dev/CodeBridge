@@ -2,6 +2,29 @@
 
 **A web-based compiler that translates a small pseudocode language into C++ and shows every compiler phase along the way.**
 
+### ▶ Live demo: **[codebridge-swart.vercel.app](https://codebridge-swart.vercel.app)**
+
+- **App:** https://codebridge-swart.vercel.app (frontend on Vercel)
+- **API health:** https://codebridge-api.onrender.com/health (FastAPI backend on Render)
+- **Source:** https://github.com/ashmita-dev/CodeBridge
+
+**Using the live app:**
+1. Open the [live demo](https://codebridge-swart.vercel.app). The backend runs on Render's free plan and sleeps when idle, so the first compile can take up to a minute while the header shows it waking up.
+2. Pick a program from the example menu, or type your own. With **Auto** on it recompiles as you type; otherwise press **Compile** (Ctrl/⌘+Enter).
+3. Use the tabs to see each phase: generated **C++**, **Tokens**, **AST**, **Symbols**, **TAC**, **Optimized TAC** and **Diagnostics**. Errors are underlined in the editor.
+
+A minimal program to try:
+
+```text
+let x = 3
+let y = 4
+let sum = x + y
+print sum
+print(x * y)
+```
+
+Direct links open an example on a chosen tab, for example [optimizer showcase](https://codebridge-swart.vercel.app/?example=optimization&tab=optimized) or [FizzBuzz as C++](https://codebridge-swart.vercel.app/?example=fizzbuzz&tab=cpp). CodeBridge generates C++ but never runs it on the server. Copy it and build it with any C++17 compiler.
+
 You write a program in the browser. CodeBridge then runs it through a hand-written compiler pipeline: lexer → recursive-descent parser → typed AST → semantic analysis → three-address code → optimizer → C++ code generator. The workbench shows the tokens, syntax tree, symbol table, original and optimized TAC, and the generated C++ for the code in the editor. Errors come back as structured diagnostics that point to a line and column.
 
 CodeBridge is a third-year B.Tech **Compiler Design** mini-project. All phases are implemented by hand in Python, with no parser generators or existing transpilers.
@@ -511,17 +534,23 @@ The setup is a **backend on Render** and a **frontend on Vercel**. Both configs 
 
 1. **Render (API):**
    - Go to *New → Blueprint* and select this repository. Render reads `render.yaml`, which uses rootDir `backend`, `pip install -r requirements.txt` and `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, with a health check on `/health`.
-   - Set `CORS_ORIGINS` to the Vercel URL, for example `https://codebridge.vercel.app`.
+   - Set `CORS_ORIGINS` to the Vercel production URL (exact origin, no trailing slash).
 2. **Vercel (frontend):**
    - Import the repository and keep the root directory as the repository root. `vercel.json` builds `frontend/`, so the shared `examples/` folder is available.
-   - Set `VITE_API_URL` to the Render URL, for example `https://codebridge-api.onrender.com`.
+   - Set `VITE_API_URL` (Production) to the Render service URL.
 3. Redeploy the frontend after setting the variable, because Vite inlines it at build time. Then check:
    - `GET <render-url>/health` returns `ok`.
    - The deployed workbench compiles the starter program.
 
 On Render's free plan the service sleeps when idle. The first request can take up to about a minute, and the UI shows a "waking up the compiler server" message while it waits.
 
-**Live URLs:** see [CLAUDE.md § Deployment](CLAUDE.md#7-deployment) for the current status.
+**Live deployment:**
+
+| Part | URL | Notes |
+|---|---|---|
+| Frontend (Vercel) | https://codebridge-swart.vercel.app | Built with `VITE_API_URL=https://codebridge-api.onrender.com`. Redeploys on every push to `main`. |
+| Backend (Render) | https://codebridge-api.onrender.com | `CORS_ORIGINS=https://codebridge-swart.vercel.app`. Redeploys on every push to `main`. |
+| Health check | https://codebridge-api.onrender.com/health | Returns `{"status":"ok",...}` |
 
 ## Limitations
 
