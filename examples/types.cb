@@ -1,0 +1,26 @@
+# Types: int, float, string and bool
+let count: int = 3
+let price: float = 19      # int widens to float
+let label: string = "Total"
+let paid: bool = false
+
+let total = price * count
+print(label + ":", total)
+print("paid?", paid, "| not paid?", not paid)
+print("Tab:\tdone", "Quote: \"ok\"")
+
+# Short-circuit: the division never runs when divisor is 0
+let divisor = 0
+if divisor != 0 and 10 / divisor > 1 {
+    print("unreachable")
+} else {
+    print("safe: divisor is zero")
+}
+
+# Shadowing in a nested block
+let x = 1
+if true {
+    let x = "inner"
+    print(x)
+}
+print(x)

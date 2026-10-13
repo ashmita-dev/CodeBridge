@@ -1,0 +1,25 @@
+# while loops: sum and factorial
+let n = 10
+let i = 1
+let sum = 0
+while i <= n {
+    sum = sum + i
+    i = i + 1
+}
+print("sum of 1 ..", n, "=", sum)
+
+let k = 1
+let fact = 1
+while k <= 15 {
+    fact = fact * k
+    k = k + 1
+}
+print("15! =", fact)
+
+# Count down
+let count = 3
+while count > 0 {
+    print("T minus", count)
+    count = count - 1
+}
+print("Liftoff!")

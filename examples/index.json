@@ -1,0 +1,14 @@
+[
+  {"id": "hello", "title": "Hello, CodeBridge", "description": "Variables, strings and print", "file": "hello.cb", "expect": "success"},
+  {"id": "arithmetic", "title": "Arithmetic & precedence", "description": "Operator precedence, associativity, int/float division", "file": "arithmetic.cb", "expect": "success"},
+  {"id": "conditions", "title": "If / else", "description": "else-if chains, nested branches, and/or/not", "file": "conditions.cb", "expect": "success"},
+  {"id": "loops", "title": "While loops", "description": "Sum, factorial and countdown", "file": "loops.cb", "expect": "success"},
+  {"id": "fizzbuzz", "title": "FizzBuzz", "description": "Loop with an else-if chain", "file": "fizzbuzz.cb", "expect": "success"},
+  {"id": "primes", "title": "Prime numbers", "description": "Nested loops and short-circuit conditions", "file": "primes.cb", "expect": "success"},
+  {"id": "fibonacci", "title": "Fibonacci", "description": "Block-scoped variables in a loop", "file": "fibonacci.cb", "expect": "success"},
+  {"id": "types", "title": "Types & scopes", "description": "Type annotations, widening, escapes, shadowing", "file": "types.cb", "expect": "success"},
+  {"id": "optimization", "title": "Optimizer showcase", "description": "Folding, propagation, simplification, branch folding", "file": "optimization.cb", "expect": "success"},
+  {"id": "error_lexical", "title": "Lexical errors", "description": "Invalid characters and malformed numbers", "file": "error_lexical.cb", "expect": "lexical"},
+  {"id": "error_syntax", "title": "Syntax error", "description": "Unbalanced parenthesis", "file": "error_syntax.cb", "expect": "syntax"},
+  {"id": "error_semantic", "title": "Semantic errors", "description": "Undefined variables and type mismatches", "file": "error_semantic.cb", "expect": "semantic"}
+]

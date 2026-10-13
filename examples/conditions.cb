@@ -1,0 +1,26 @@
+# if / else if / else with nested conditions
+let score = 78
+
+if score >= 90 {
+    print("Grade A")
+} else if score >= 75 {
+    print("Grade B")
+    if score % 2 == 0 {
+        print("an even score")
+    } else {
+        print("an odd score")
+    }
+} else {
+    print("Grade C")
+}
+
+let temperature = 31.5
+let raining = false
+if temperature > 30 and not raining {
+    print("Hot and dry")
+}
+if raining or temperature < 10 {
+    print("Stay inside")
+} else {
+    print("Go outside")
+}

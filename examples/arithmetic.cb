@@ -1,0 +1,18 @@
+# Operator precedence and associativity
+let a = 2 + 3 * 4          # * binds tighter than +   -> 14
+let b = (2 + 3) * 4        # parentheses override      -> 20
+let c = 20 - 5 - 3         # left-associative          -> 12
+let d = 100 / 10 / 5       # left-associative          -> 2
+let e = -7 / 2             # truncates toward zero     -> -3
+let f = -7 % 3             # sign follows the dividend -> -1
+let g = 2 * -(3 + 4)       # unary minus               -> -14
+
+print(a, b, c, d)
+print(e, f, g)
+
+# Mixed int/float arithmetic promotes to float
+let radius = 3
+let pi = 3.14159
+let circle = pi * radius * radius
+print("circle area:", circle)
+print("half of 7:", 7 / 2, 7 / 2.0)

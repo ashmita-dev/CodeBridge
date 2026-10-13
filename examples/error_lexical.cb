@@ -1,0 +1,4 @@
+# Lexical errors: invalid characters and malformed literals
+let price = 12.5.3
+let tag = @home
+let ok = !true

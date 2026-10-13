@@ -1,0 +1,14 @@
+# Welcome to CodeBridge!
+# Edit this program and press Compile to see every compiler phase.
+
+let language = "CodeBridge"
+let version = 1
+let ready = true
+
+print("Hello from", language, version)
+print("Ready:", ready)
+
+let width = 8
+let height = 5
+let area = width * height
+print("Area of", width, "x", height, "is", area)

@@ -1,0 +1,17 @@
+# Watch the Optimized TAC tab: most of this program folds away.
+let seconds = 60 * 60 * 24      # constant folding
+let minutes = seconds / 60      # constant propagation + folding
+let zero = minutes * 0          # algebraic simplification: x * 0 = 0
+let same = minutes + 0          # algebraic simplification: x + 0 = x
+print(seconds, minutes, zero, same)
+
+let debug = false
+if debug {                      # branch folding removes this block
+    print("debugging")
+}
+
+let i = 0
+while i < 3 {                   # loop variables are not propagated across iterations
+    print(i * 1 + 0)
+    i = i + 1
+}

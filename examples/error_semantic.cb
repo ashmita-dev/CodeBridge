@@ -1,0 +1,10 @@
+# Semantic errors: undefined variables and type mismatches
+let count = 10
+let name = "Ada"
+
+total = count + 1
+let mixed = name + count
+if count {
+    print(missing)
+}
+count = 2.5
