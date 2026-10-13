@@ -1,107 +1,128 @@
-# CodeBridge — Project Guide for Claude
+# CodeBridge: Project Guide for Claude
 
-This file holds the durable requirements and working rules for CodeBridge. Read it at the start of every session and keep it current.
+Read this at the start of every session and keep it current. It holds the durable requirements and working rules.
 
 ## 1. Project overview
 
-CodeBridge is a source-to-source compiler (transpiler) with a web interface. A user enters source code in the browser, and the backend runs it through a classic compiler pipeline. It returns the translated code plus inspectable intermediate stages: tokens, AST, diagnostics and IR.
+CodeBridge is a web-based compiler that translates a small, statically typed **pseudocode language into C++17**. It exposes every compiler phase in a developer workbench UI. It is a third-year B.Tech Compiler Design mini-project and a resume project, so correctness and honest claims matter more than features.
 
-> Assumption to confirm: the source and target languages are not decided yet. Record the decision here once it is made.
+The language reference is `docs/LANGUAGE.md`, and it is the single source of truth for the grammar and semantics.
 
-## 2. Requirements
+## 2. Requirements (non-negotiable)
 
-- The compiler pipeline is implemented by hand in Python. Do not wrap an existing transpiler.
-- Each pipeline stage is a separate, independently testable module with a clear input and output type.
-- Errors are reported as structured diagnostics with a line, a column, a severity and a message. The compiler must never fail with an unhandled exception on user input.
-- The backend exposes the pipeline through a FastAPI JSON API.
-- The frontend is a Vite-based single-page app. It has a code editor, the translated output, and views for each intermediate stage.
-- Secrets and environment-specific settings come from environment variables and are never committed.
+- The compiler is hand-written in Python:
+  - lexer
+  - recursive-descent parser
+  - typed AST
+  - symbol table and semantic analysis/type checking
+  - TAC generation
+  - optimizer
+  - C++ generation
+- Every compiler module must be testable without FastAPI.
+- Diagnostics are structured: stage (lexical/syntax/semantic/internal), code, message, line/column span and notes. User input must never crash the server.
+- When compilation fails, the response contains no downstream artifacts: no TAC and no C++.
+- Never display fake or hardcoded compilation output. Everything the frontend shows comes from the backend response for the current input.
+- Never execute user-generated C++ on the backend. Execution is out of scope; tests compile C++ locally only.
+- Never claim features that are not implemented (functions, for loops, arrays, input, runtime execution).
+- No secrets in Git. Configuration comes from environment variables.
 
 ## 3. Architecture
 
 ```
 CodeBridge/
-├── backend/                 # Python 3.13 + FastAPI
-│   ├── .venv/               # local virtual environment (git-ignored)
-│   ├── app/
-│   │   ├── api/             # FastAPI routes, request/response schemas
-│   │   └── compiler/
-│   │       ├── lexer.py     # source text -> tokens
-│   │       ├── parser.py    # tokens -> AST
-│   │       ├── ast.py       # AST node definitions
-│   │       ├── semantic.py  # scopes, symbols, type checks -> annotated AST
-│   │       ├── ir.py        # annotated AST -> intermediate representation
-│   │       ├── codegen.py   # IR -> target-language source
-│   │       └── diagnostics.py
-│   └── tests/               # pytest, mirrors app/ structure
-├── frontend/                # Vite SPA
-└── CLAUDE.md, README.md, .gitignore
+├── backend/                     Python 3.13.15 (backend\.venv), FastAPI
+│   ├── app/main.py              GET /health, POST /compile, CORS, error handling
+│   ├── app/config.py            CORS_ORIGINS, MAX_SOURCE_CHARS from env
+│   ├── app/schemas.py           Pydantic request/response models
+│   └── app/compiler/
+│       ├── tokens.py, lexer.py          source -> tokens
+│       ├── parser.py, ast_nodes.py      tokens -> AST (EBNF in parser docstring)
+│       ├── semantic.py, typesys.py      symbol table, scopes, type checking
+│       ├── tac.py, tacgen.py            typed AST -> three-address code
+│       ├── semantics.py                 C++-compatible value semantics for folding
+│       ├── optimizer.py                 local propagation/folding, peephole, DCE
+│       ├── codegen_cpp.py               optimized TAC -> structured C++
+│       ├── diagnostics.py               Span, Diagnostic, CompileError
+│       └── pipeline.py                  compile_source() orchestration
+│   └── tests/                   pytest; helpers.py has reference AST and TAC interpreters
+│                                and a g++ build-and-run harness
+├── frontend/                    React + Vite + TypeScript + Tailwind + CodeMirror 6
+├── examples/                    *.cb samples, index.json, expected/*.txt outputs
+└── docs/                        LANGUAGE.md, report and slide content
 ```
 
-Pipeline: **source → Lexer → Parser → AST → Semantic analysis → IR → Code generation → target source**. Diagnostics are collected at every stage.
+Pipeline:
+
+```
+source → lexer → parser → semantic → TAC → optimizer → C++ codegen
+```
+
+Each phase stops the pipeline on errors.
+
+Key design decisions:
+- **Statements:** a newline or `;` ends a statement. Blocks use `{}`. `else if` chains are supported.
+- **Types:** int (`long long`), float (`double`), string (`std::string`) and bool. Only int→float converts implicitly.
+- **Value semantics follow C++:** integer division truncates, and `%` takes the sign of the dividend. `print` formats floats like `std::cout` (`%g`).
+- **Shadowed variables** get unique names (`x_2`) in semantic analysis. Names are also kept clear of C++ keywords and the TAC temporaries `tN`.
+- **Optimizer:** constant propagation is local to basic blocks and is reset at every label, which is safe across loops and branches. Folding refuses overflow, division by zero and non-finite results.
+- **Codegen** works only from the optimized TAC. It recovers if/else/while from the jump patterns and falls back to `goto` if a pattern doesn't match.
 
 Toolchain:
-- Backend: Python **3.13**. Always run it through `backend\.venv`. Do not use bare `py`, which runs 3.14, or the default `python`, which is 3.9.
-- Frontend: Node.js 22 and npm 10.
-- Windows development machine using PowerShell.
+- Backend: always use `backend\.venv\Scripts\python.exe`. Bare `py` is 3.14, and the default `python` is 3.9.
+- Frontend: Node 22 and npm 10.
+- g++ 16 (MSYS2) is at `C:\msys64\ucrt64\bin\g++.exe` and is used by the tests. Override it with `CODEBRIDGE_CXX`.
+- Windows with PowerShell. Don't name a module after a stdlib module: `types.py` was renamed to `typesys.py`.
 
-## 4. Milestone plan
+## 4. Milestones
 
-| # | Milestone | Status |
-|---|---|---|
-| M0 | Repository setup: CLAUDE.md, README, .gitignore, Git, venv, GitHub remote | Done |
-| M1 | Backend skeleton: FastAPI app, health endpoint, pytest setup, dependency pinning | **Next** |
-| M2 | Lexer and diagnostics with tests | Planned |
-| M3 | Parser and AST with tests | Planned |
-| M4 | Semantic analysis with tests | Planned |
-| M5 | IR and code generation with tests | Planned |
-| M6 | Compile API endpoint returning all stages | Planned |
-| M7 | Frontend: Vite app, editor, output and stage views | Planned |
-| M8 | Deployment and CI | Planned |
-
-Work on one milestone at a time. Do not start the next milestone without the user's go-ahead.
+- [x] M0 Repository setup (git, venv, GitHub remote)
+- [x] M1 Language spec, backend scaffold, /health
+- [x] M2 Lexer and tests
+- [x] M3 Parser, AST and tests
+- [x] M4 Symbol table, semantic analysis, type checking
+- [x] M5 TAC generation
+- [x] M6 Optimizer, and C++ generation verified by building with g++
+- [x] M7 FastAPI /compile, API tests, end-to-end server tests
+- [ ] M8 Frontend workbench (React/Vite/TS/Tailwind/CodeMirror) **← next**
+- [ ] M9 UI polish, examples, pipeline visualization
+- [ ] M10 README, report, slides, test matrix
+- [ ] M11 Full verification
+- [ ] M12 Deployment: Vercel (frontend) and Render (backend)
 
 ## 5. Mandatory testing rules
 
-- Every new feature or bug fix comes with automated tests in the same change.
-- Backend: `pytest`, run from `backend/` using the venv interpreter. Each compiler stage has unit tests for valid input, invalid input (expected diagnostics) and edge cases such as empty input and Unicode.
-- Frontend: tests are run with the project's configured test runner (to be chosen in M7).
-- Run the full test suite before every commit. **Never commit with failing tests.** Never delete or weaken tests just to make them pass.
-- Report test results faithfully, including failures and skipped tests.
+- Every feature or fix ships with tests in the same commit, and each commit must pass its tests.
+- Backend: `cd backend; .venv\Scripts\python.exe -m pytest`. This includes the g++ build-and-run tests, which are skipped if no compiler is found, and an end-to-end Uvicorn test.
+- Optimizer changes must keep `test_differential_random_programs` and the example equivalence tests passing.
+- Frontend: `npm run typecheck`, `npm run build` and `npm test` in `frontend/`.
+- Never commit with failing tests. Never weaken tests to make them pass. Report results faithfully.
 
-## 6. Git commit and push workflow
+## 6. Git workflow
 
-- Default branch: `main`. Remote: `origin` → `https://github.com/ashmita-dev/CodeBridge` (public).
-- Use Conventional Commit messages: `feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`.
-- Keep commits small and focused. Each commit must have passing tests.
+- Branch: `main`. Remote: `origin` → https://github.com/ashmita-dev/CodeBridge (public).
+- Use Conventional Commits. Make small milestone commits, and end each message with the Co-Authored-By line.
 - Before each commit:
-  1. Check `git status` and the diff.
+  1. `git status` and inspect the diff.
   2. Run the tests.
-  3. Make sure no secrets, `.env` files or venvs are staged.
-- Push to `origin main` after each completed milestone, or when the user asks.
-- **Forbidden without the user's explicit approval:** force-push, `reset --hard`, history rewrites, branch deletion, and any change to remote repository settings.
-- Never print or commit credentials or tokens.
+  3. Make sure no `.env`, venv, `node_modules` or `dist` are staged.
+- Push after each milestone and verify that `git status -sb` shows the branch in sync with `origin/main`.
+- **Forbidden:** force-push, history rewrites, `reset --hard`, deleting branches, and changing repository settings without approval.
 
-## 7. Deployment requirements
+## 7. Deployment
 
-> To be finalized in M8. Platform not yet chosen.
+- **Backend → Render:**
+  - `render.yaml` at the repo root, with rootDir `backend`.
+  - Build: `pip install -r requirements.txt`.
+  - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+  - Health check: `/health`. Python version comes from `backend/.python-version`.
+  - Env: `CORS_ORIGINS` (the Vercel URL) and `MAX_SOURCE_CHARS`.
+- **Frontend → Vercel:**
+  - `vercel.json` at the repo root builds `frontend/`.
+  - Env: `VITE_API_URL`, set to the Render URL.
+- Never claim a deployment succeeded without checking `/health` and making a real compile request from the deployed frontend.
 
-- The backend and frontend can be deployed independently. The frontend's API base URL is set through a Vite env variable (`VITE_API_URL`).
-- All configuration comes from environment variables. A committed `.env.example` documents them with no real values.
-- CORS is restricted to the deployed frontend origin.
-- CI (GitHub Actions) runs the backend and frontend test suites on every push and pull request. A deploy happens only when CI passes.
-- The deployed backend must expose a health endpoint.
+## 8. Progress log
 
-## 8. Setup log
-
-**M0 completed on 2026-10-13:**
-- Created CLAUDE.md, README.md and .gitignore.
-- Initialized Git on branch `main`. Initial commit: `28fad2e chore: initialize CodeBridge project`.
-- Created a Python 3.13.15 virtual environment at `backend\.venv` (git-ignored). No dependencies are installed yet.
-- Created the public GitHub repository `ashmita-dev/CodeBridge`, set it as `origin`, and pushed `main`, which tracks `origin/main`.
-
-**Next milestone: M1, the backend skeleton:**
-- `backend/requirements.txt` (or `pyproject.toml`) with pinned FastAPI, Uvicorn, pytest and httpx.
-- `backend/app/main.py` with a FastAPI app and a `GET /health` endpoint.
-- `backend/tests/test_health.py`, run with `backend\.venv\Scripts\python.exe -m pytest`.
-- Commit with passing tests, then push.
+- **2026-10-13:**
+  - M0 setup completed.
+  - M1–M7 implemented. 178 backend tests pass, including g++ builds of every example and 300 random differential programs.
