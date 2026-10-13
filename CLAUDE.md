@@ -94,4 +94,14 @@ Work on one milestone at a time. Do not start the next milestone without the use
 
 ## 8. Setup log
 
-_(updated as setup steps complete)_
+**M0 completed on 2026-10-13:**
+- Created CLAUDE.md, README.md and .gitignore.
+- Initialized Git on branch `main`. Initial commit: `28fad2e chore: initialize CodeBridge project`.
+- Created a Python 3.13.15 virtual environment at `backend\.venv` (git-ignored). No dependencies are installed yet.
+- Created the public GitHub repository `ashmita-dev/CodeBridge`, set it as `origin`, and pushed `main`, which tracks `origin/main`.
+
+**Next milestone: M1, the backend skeleton:**
+- `backend/requirements.txt` (or `pyproject.toml`) with pinned FastAPI, Uvicorn, pytest and httpx.
+- `backend/app/main.py` with a FastAPI app and a `GET /health` endpoint.
+- `backend/tests/test_health.py`, run with `backend\.venv\Scripts\python.exe -m pytest`.
+- Commit with passing tests, then push.
