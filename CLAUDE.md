@@ -83,11 +83,11 @@ Toolchain:
 - [x] M5 TAC generation
 - [x] M6 Optimizer, and C++ generation verified by building with g++
 - [x] M7 FastAPI /compile, API tests, end-to-end server tests
-- [ ] M8 Frontend workbench (React/Vite/TS/Tailwind/CodeMirror) **← next**
-- [ ] M9 UI polish, examples, pipeline visualization
-- [ ] M10 README, report, slides, test matrix
-- [ ] M11 Full verification
-- [ ] M12 Deployment: Vercel (frontend) and Render (backend)
+- [x] M8 Frontend workbench (React/Vite/TS/Tailwind/CodeMirror)
+- [x] M9 UI polish, deep links (`?example=` and `?tab=`), screenshots
+- [x] M10 README, docs/TEST_MATRIX.md, docs/REPORT.md, docs/SLIDES.md
+- [x] M11 Full verification, CI green
+- [ ] M12 Deployment: Vercel (frontend) and Render (backend) **← next; needs the owner's account access**
 
 ## 5. Mandatory testing rules
 
@@ -114,11 +114,19 @@ Toolchain:
   - `render.yaml` at the repo root, with rootDir `backend`.
   - Build: `pip install -r requirements.txt`.
   - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-  - Health check: `/health`. Python version comes from `backend/.python-version`.
-  - Env: `CORS_ORIGINS` (the Vercel URL) and `MAX_SOURCE_CHARS`.
+  - Health check: `/health`.
+  - Env:
+    - `PYTHON_VERSION=3.13.15` (set in `render.yaml`; takes precedence)
+    - `CORS_ORIGINS` (the Vercel URL, `sync: false`)
+    - `MAX_SOURCE_CHARS`
 - **Frontend → Vercel:**
-  - `vercel.json` at the repo root builds `frontend/`.
-  - Env: `VITE_API_URL`, set to the Render URL.
+  - `vercel.json` at the repo root runs `npm ci` and the build in `frontend/`, and outputs `frontend/dist`.
+  - Env: `VITE_API_URL`, set to the Render URL. It is inlined at build time, so redeploy after changing it.
+- **Verified locally:**
+  - a clean venv with only `requirements.txt` serves the app using Render's start command;
+  - the production build with `VITE_API_URL` set compiles against it;
+  - CORS allows only the configured origin.
+- **Status:** not deployed yet. No Render or Vercel CLI or credentials are available on this machine. **Live URLs: none yet.**
 - Never claim a deployment succeeded without checking `/health` and making a real compile request from the deployed frontend.
 
 ## 8. Progress log
@@ -126,3 +134,5 @@ Toolchain:
 - **2026-10-13:**
   - M0 setup completed.
   - M1–M7 implemented. 178 backend tests pass, including g++ builds of every example and 300 random differential programs.
+  - M8–M11: frontend, docs and CI completed.
+  - Final run: backend 178 passed; frontend typecheck OK, 20 tests passed, build OK; GitHub Actions CI green.
