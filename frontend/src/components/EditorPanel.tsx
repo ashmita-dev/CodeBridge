@@ -43,7 +43,7 @@ export function EditorPanel(props: Props) {
           id="example-select"
           value={props.exampleId}
           onChange={(e) => props.onExample(e.target.value)}
-          className="min-w-0 max-w-[13rem] cursor-pointer rounded-lg border border-line-strong bg-ink-800 px-2 py-1.5 text-xs text-fg outline-none hover:border-fg-faint focus-visible:border-accent sm:flex-none"
+          className="min-w-0 max-w-[10.5rem] cursor-pointer rounded-lg border border-line-strong bg-ink-800 px-2 py-1.5 text-xs text-fg outline-none hover:border-fg-faint focus-visible:border-accent sm:flex-none"
         >
           <optgroup label="Programs">
             {programs.map((e) => (
@@ -63,7 +63,7 @@ export function EditorPanel(props: Props) {
         </select>
         <button type="button" className="btn" onClick={props.onReset} title="Restore the selected example">
           <ResetIcon className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Reset</span>
+          <span className="hidden sm:inline lg:hidden 2xl:inline">Reset</span>
         </button>
         <div className="flex items-center gap-3">
           <Toggle label="Optimize" checked={props.optimize} onChange={props.onOptimize} />
@@ -79,7 +79,7 @@ export function EditorPanel(props: Props) {
           >
             {loading ? <SpinnerIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5" />}
             Compile
-            <span className="kbd hidden md:inline">Ctrl ↵</span>
+            <span className="kbd hidden 2xl:inline">Ctrl ↵</span>
           </button>
         </div>
       </div>

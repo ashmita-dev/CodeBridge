@@ -69,7 +69,7 @@ export function TokensView({ tokens, onReveal }: { tokens: Token[]; onReveal(spa
                   {t.type === "EOF" ? <span className="text-fg-faint">⟨end⟩</span> : t.lexeme}
                 </td>
                 <td className="border-b border-line/60 px-3 py-1.5 text-fg-muted">
-                  {t.value === undefined ? "" : JSON.stringify(t.value)}
+                  {t.value === undefined || t.value === null ? "" : JSON.stringify(t.value)}
                 </td>
                 <td className="border-b border-line/60 px-3 py-1.5 text-fg-faint">
                   {t.line}:{t.column}

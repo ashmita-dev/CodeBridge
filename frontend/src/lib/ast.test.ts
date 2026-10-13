@@ -43,6 +43,11 @@ describe("ast helpers", () => {
       ["value", '"a"'],
       ["type", "string"],
     ]);
+    const letStmt = childrenOf(tree)[0].node;
+    expect(attributesOf(letStmt)).toEqual([
+      ["name", "x"],
+      ["var_type", "int"],
+    ]);
   });
 
   it("counts nodes", () => {

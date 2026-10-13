@@ -26,15 +26,23 @@ export function childrenOf(node: AstNode): TreeChild[] {
   return out;
 }
 
-/** Scalar properties worth showing next to the node kind. */
+const ATTRIBUTE_ORDER = ["name", "op", "value", "declared_type", "var_type", "type", "symbol"];
+
+/** Scalar properties worth showing next to the node kind, in a stable order. */
 export function attributesOf(node: AstNode): [string, string][] {
   const out: [string, string][] = [];
   for (const [key, value] of Object.entries(node)) {
     if (META_KEYS.has(key) || isAstNode(value) || Array.isArray(value)) continue;
     if (value === null || value === undefined) continue;
+    // A symbol equal to the source name adds nothing; renamed symbols are shown.
+    if (key === "symbol" && value === node.name) continue;
     out.push([key, typeof value === "string" && key === "value" ? JSON.stringify(value) : String(value)]);
   }
-  return out;
+  const rank = (key: string) => {
+    const i = ATTRIBUTE_ORDER.indexOf(key);
+    return i === -1 ? ATTRIBUTE_ORDER.length : i;
+  };
+  return out.sort((a, b) => rank(a[0]) - rank(b[0]));
 }
 
 export function countNodes(node: AstNode): number {
