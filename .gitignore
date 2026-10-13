@@ -44,6 +44,9 @@ out/
 secrets/
 credentials*.json
 
+# ---- Deployment CLIs (local project links) ----
+.vercel/
+
 # ---- Editors / OS ----
 .vscode/
 !.vscode/extensions.json

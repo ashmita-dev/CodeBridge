@@ -1,0 +1,10 @@
+# The Vercel project builds only the frontend (see vercel.json). It needs
+# frontend/ and examples/ (bundled by Vite); everything else stays local.
+backend
+docs
+.github
+**/node_modules
+**/dist
+**/.venv
+**/.env
+**/.env.*
