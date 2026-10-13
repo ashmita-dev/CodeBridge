@@ -67,7 +67,7 @@ Students usually meet compiler phases one at a time and on paper. They rarely ge
   - copy buttons
   - responsive mobile layout
 - **Testing:**
-  - 204 backend tests, including a 300-program randomized differential test of the optimizer
+  - 213 backend tests, including a 300-program randomized differential test of the optimizer
   - g++ build-and-run checks for every example
   - an end-to-end HTTP test against a live Uvicorn server
   - 20 frontend tests
@@ -428,7 +428,7 @@ The frontend calls `http://localhost:8000` in development by default. To point i
 ## Testing
 
 ```powershell
-cd backend;  .venv\Scripts\python.exe -m pytest      # 204 tests
+cd backend;  .venv\Scripts\python.exe -m pytest      # 213 tests
 cd frontend; npm run typecheck; npm test; npm run build   # 20 tests + type check + build
 ```
 

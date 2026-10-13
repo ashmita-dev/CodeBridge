@@ -149,6 +149,46 @@ def test_both_print_forms_build_and_run():
     assert build_and_run_cpp(cpp_for(source, optimized=False)) == run_ast(source)
 
 
+# Expected output worked out by hand from C++ semantics, independent of the
+# reference interpreter, so a shared mistake in both cannot hide.
+HAND_CHECKED = {
+    "int_division_and_modulo": ("let a = -7\nlet b = 2\nprint(7 / 2, a / b, 7 % 3, a % 3, 7 % -3)\n"
+                                "print a * b - b, 2 + 3 * 4, (2 + 3) * 4, 10 - 4 - 3",
+                                "3 -3 1 -1 1\n-16 14 20 3\n"),
+    "float_widening_and_format": ("let i = 3\nlet x: float = 5\nx = x / 2\n"
+                                  "print(i / 2 * 1.0, i * 1.5, x, 1.0 / 3.0, 1e6, 2.5e-7, 1234567.0, -0.0)",
+                                  "1 4.5 2.5 0.333333 1e+06 2.5e-07 1.23457e+06 -0\n"),
+    "strings_and_bools": ('let s = "a\\tb"\nprint(s + "!", "q\\"t", s == "a\\tb", not true, 1 < 2 == true)',
+                          'a\tb! q"t true false true\n'),
+    "else_if_chain": ('let i = 0\nwhile i < 5 {\nif i == 0 { print("zero") }\nelse if i % 2 == 0 { print("even", i) }\n'
+                      'else if i == 3 { print("three") }\nelse { print("odd", i) }\ni = i + 1\n}',
+                      "zero\nodd 1\neven 2\nthree\neven 4\n"),
+    "nested_loops_and_zero_trip": ('let i = 1\nwhile i <= 3 {\nlet j = 1\nlet row = ""\n'
+                                   'while j <= i { row = row + "*"\nj = j + 1 }\nprint(i, row)\ni = i + 1\n}\n'
+                                   'while i < 0 { print("never") }',
+                                   "1 *\n2 **\n3 ***\n"),
+    "short_circuit_guards_division": ('let d = 0\nif d != 0 and 10 / d > 1 { print("bad") } else { print("safe") }\n'
+                                      "print(d == 0 or 10 / d > 1)",
+                                      "safe\ntrue\n"),
+    "shadowing_across_types": ('let x = 1\nif true { let x = "inner"\nprint(x)\nif true { let x = 2.5\nprint(x) } }\n'
+                               "x = x + 1\nprint(x)",
+                               "inner\n2.5\n2\n"),
+    "cpp_keywords_as_names": ("let main = 2\nlet t1 = 3\nlet std = 4\nlet auto = 5\nprint(main + t1 + std + auto)", "14\n"),
+    "loop_carried_values": ("let n = 27\nlet steps = 0\nwhile n != 1 {\nif n % 2 == 0 { n = n / 2 } else { n = 3 * n + 1 }\n"
+                            "steps = steps + 1\n}\nprint(steps)",
+                            "111\n"),
+}
+
+
+@needs_cxx
+@pytest.mark.parametrize("name", sorted(HAND_CHECKED))
+def test_generated_cpp_matches_hand_checked_output(name):
+    source, expected = HAND_CHECKED[name]
+    assert run_ast(source) == expected
+    assert build_and_run_cpp(cpp_for(source)) == expected
+    assert build_and_run_cpp(cpp_for(source, optimized=False)) == expected
+
+
 @needs_cxx
 def test_random_programs_compile_and_match():
     rng = random.Random(7)

@@ -1,7 +1,7 @@
 # Test Matrix
 
 The tests break down as follows:
-- **224 automated tests in total:** 204 backend tests (pytest) and 20 frontend tests (Vitest).
+- **233 automated tests in total:** 213 backend tests (pytest) and 20 frontend tests (Vitest).
 - **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs every suite on each push. It also runs the frontend type check and production build.
 
 How to run them:
@@ -20,7 +20,7 @@ cd frontend; npm run typecheck; npm test; npm run build
 | `test_semantic.py` | 31 | typing and resolution, both `print` forms resolved and type-checked, 18 error cases (S001–S006 with exact positions), no cascading errors, scopes and shadowing, block visibility, initializer scoping, unique C++-safe names, widening rules, unused warnings, typed AST JSON |
 | `test_tac.py` | 18 | exact TAC for expressions, conversions, unary/print, both `print` forms give identical TAC, if/else, if, while, short-circuit and/or, shadowed names, label integrity, TAC interpreter vs. AST interpreter |
 | `test_optimizer.py` | 28 | folding and propagation, C++ integer semantics, refusing unsafe folds (overflow, ±inf), algebraic identities, float identities that must **not** apply, no propagation into loops or across joins, invalidation on reassignment, branch folding and dead code, `while true`, coalescing, user variables and prints kept, short-circuit safety, label consistency, fixed point, **examples equivalence**, **300 random differential programs** |
-| `test_codegen.py` | 27 | program skeleton, both `print` forms give identical C++ (and are built and run with g++), type mapping, inline vs. hoisted declarations, structured control flow and `else if`, parenthesization, conversions and string concatenation, literal wrapping, string escaping, INT64_MIN, goto fallback, merged print text, C++ follows optimized TAC; **g++ build and run** of every example, unoptimized output, random programs and semantic edge cases |
+| `test_codegen.py` | 36 | program skeleton, 9 g++ programs whose expected output was derived by hand (integer `/` and `%` signs, float widening and formatting, strings, else-if chains, nested and zero-trip loops, short-circuit guards, shadowing, C++ keywords as names), both `print` forms give identical C++ (and are built and run with g++), type mapping, inline vs. hoisted declarations, structured control flow and `else if`, parenthesization, conversions and string concatenation, literal wrapping, string escaping, INT64_MIN, goto fallback, merged print text, C++ follows optimized TAC; **g++ build and run** of every example, unoptimized output, random programs and semantic edge cases |
 | `test_api.py` | 31 | full success payload, both `print` forms through the API, invalid `print` syntax payload, optimizer toggle, lexical/syntax/semantic error payloads (no downstream artifacts), warnings, empty program, Unicode, request validation (422), malformed JSON, size limit (413), JSON 500 handler, CORS preflight, every example through the API, determinism, a 20k-character program |
 | `test_health.py` | 3 | `/health`, CORS allow and deny |
 | `test_e2e_server.py` | 6 | **end-to-end:** starts Uvicorn, checks `/health` over HTTP, error programs over HTTP, invalid request, compiles examples over HTTP, then builds and runs the returned C++ |
@@ -52,7 +52,7 @@ cd frontend; npm run typecheck; npm test; npm run build
 | Lexical errors | `test_lexer.py`, `error_lexical.cb` |
 | Optimizer preserves behavior | `test_optimizer.py::test_examples_behave_identically_after_optimization`, `::test_differential_random_programs` (300 programs), g++ runs |
 | Optimizer is conservative | `test_unsafe_operations_are_not_folded`, `test_float_identities_that_are_not_exact_are_kept`, `test_constants_are_not_propagated_into_loops`, `test_values_are_forgotten_at_branch_joins`, `test_reassignment_invalidates_copies` |
-| Generated C++ is valid and equivalent | `test_codegen.py::test_examples_compile_and_match_expected_output` (9 programs), `::test_random_programs_compile_and_match`, `::test_semantics_edge_cases_match_cpp` |
+| Generated C++ is valid and equivalent | `test_codegen.py::test_examples_compile_and_match_expected_output` (9 programs), `::test_generated_cpp_matches_hand_checked_output` (9 programs), `::test_random_programs_compile_and_match`, `::test_semantics_edge_cases_match_cpp` |
 | Structured errors, no server crashes | `test_api.py` (error payloads, 422/413/500), `test_parser.py::test_deep_nesting_is_rejected_cleanly` |
 | End-to-end | `test_e2e_server.py` (real server → HTTP → g++ → output) |
 | UI shows only real API output | `OutputPanel.test.tsx` (no C++ on failure, stale banner); all views render fields of the response |
@@ -74,7 +74,7 @@ These are the results of the final run on 2026-10-13. The development machine wa
 
 | Check | Result |
 |---|---|
-| Backend pytest | 204 passed |
+| Backend pytest | 213 passed |
 | Frontend type check (TypeScript 7) | passed |
 | Frontend Vitest | 20 passed |
 | Frontend production build (Vite 8) | passed |

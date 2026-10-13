@@ -15,7 +15,7 @@ CodeBridge is a compiler that translates a small, statically typed pseudocode la
 
 The compiler is exposed through a FastAPI web service and a React workbench. The workbench shows the output of every phase for the program being edited: tokens, AST, symbol table, original and optimized TAC, generated C++ and structured diagnostics.
 
-Correctness is checked by 204 automated backend tests:
+Correctness is checked by 213 automated backend tests:
 - the generated C++ for every example program is compiled with g++ and its output compared with a reference interpreter;
 - the optimizer is checked against 300 randomly generated programs.
 
@@ -244,7 +244,7 @@ The full matrix is in `docs/TEST_MATRIX.md`.
 | Semantic analysis | 31 | pass |
 | TAC generation | 18 | pass |
 | Optimizer, including 300-program differential test | 28 | pass |
-| C++ generation, including g++ build and run | 27 | pass |
+| C++ generation, including g++ build and run | 36 | pass |
 | API and health | 34 | pass |
 | End-to-end (live server → HTTP → g++) | 6 | pass |
 | Frontend (Vitest) | 20 | pass |

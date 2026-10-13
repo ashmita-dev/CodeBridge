@@ -137,3 +137,10 @@ Toolchain:
   - M8–M11: frontend, docs and CI completed.
   - Final run: backend 178 passed; frontend typecheck OK, 20 tests passed, build OK; GitHub Actions CI green.
   - `print` now accepts both `print(expr, ...)` and the bare form `print expr, ...` (same AST, TAC and C++). A `(` after `print` is the parenthesized form only if its `)` ends the statement, so `print (a + b) * 2` prints one value. A bare `print` alone is a syntax error; `print()` prints an empty line. Examples keep `print(...)`. Backend 204 passed; frontend typecheck OK, 20 passed, build OK.
+  - Pre-deployment audit, with no defects found:
+    - 21 hand-checked programs: outputs match the reference interpreter and g++ builds, optimized and unoptimized;
+    - 18 lexical, syntax and semantic error cases;
+    - 192 random programs, covering `/`, `%`, floats, strings, else-if, nested loops and shadowing, all match g++;
+    - API checks: 422, 413 and CORS deny;
+    - no tracked secrets; `npm audit` reports 0 vulnerabilities.
+  - Added 9 hand-checked g++ regression tests. Backend 213 passed.
